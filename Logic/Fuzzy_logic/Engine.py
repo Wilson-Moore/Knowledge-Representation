@@ -56,7 +56,7 @@ class FuzzyLungDiseaseSystem:
             
             # Règles MEDIUM (d'après vos groupes 4-6)
             ctrl.Rule(self.smoking['medium'] & self.air_pollution['medium'], self.risk_level['medium']),
-            ctrl.Rule(self.chest_pain['medium'] & self.shortness_breath['medium'], self.risk_level['medium']),
+            ctrl.Rule(self.chest_pain['medium'] & self.shortness_breath['medium'], self.risk_level['high']),
             ctrl.Rule(self.age['middle'] & self.smoking['medium'], self.risk_level['medium']),
             
             # Règles LOW (d'après vos groupes 7-9)
