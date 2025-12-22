@@ -4,7 +4,7 @@ from Logic.Fuzzy_logic.Helpers import analyze_dataset_with_fuzzy, calculate_perf
 def main():
     # Charger les données
     print("Loading dataset...")
-    df = pd.read_csv("lung_cancer.csv")
+    df = pd.read_csv("data/lung_cancer.csv")
     
     # Analyser
     print("\n" + "="*70)

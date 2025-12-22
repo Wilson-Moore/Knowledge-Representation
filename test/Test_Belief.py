@@ -38,7 +38,7 @@ def test_dataset():
     print("Chargement du dataset...")
     
     try:
-        df = pd.read_csv("lung_cancer.csv")
+        df = pd.read_csv("data/lung_cancer.csv")
         print(f"Dataset chargé: {len(df)} patients")
     except:
         print("Erreur: fichier lung_cancer.csv non trouvé")
