@@ -6,7 +6,6 @@ import pandas as pd
 def create_lung_disease_propositions() -> List[Proposition]:
 
     propositions=[
-        # Age-related propositions
         Proposition(
             name="young",
             description="Patient is young (age < 30)",
@@ -21,19 +20,7 @@ def create_lung_disease_propositions() -> List[Proposition]:
             name="senior",
             description="Patient is senior (age > 50)",
             fn=lambda p: p.age>50
-        ),
-        Proposition(
-            name="male",
-            description="Patient is male",
-            fn=lambda p: p.gender.upper()=="M"
-        ),
-        Proposition(
-            name="female",
-            description="Patient is female",
-            fn=lambda p: p.gender.upper()=="F"
-        ),
-        
-        # Symptom-based propositions
+        ),      
         Proposition(
             name="severe_cough",
             description="Has severe cough (severity >= 7)",
@@ -47,17 +34,17 @@ def create_lung_disease_propositions() -> List[Proposition]:
         Proposition(
             name="chest_pain",
             description="Has chest pain (severity >= 5)",
-            fn=lambda p: p.has_symptom("chest_pain",5)
+            fn=lambda p: p.has_symptom("chest_pain",4)
         ),
         Proposition(
             name="shortness_of_breath",
             description="Has shortness of breath (severity >= 6)",
-            fn=lambda p: p.has_symptom("shortness_of_breath",6)
+            fn=lambda p: p.has_symptom("shortness_of_breath",5)
         ),
         Proposition(
             name="fatigue",
             description="Has fatigue (severity >= 6)",
-            fn=lambda p: p.has_symptom("fatigue",6)
+            fn=lambda p: p.has_symptom("fatigue",4)
         ),
         Proposition(
             name="weight_loss",
@@ -68,9 +55,7 @@ def create_lung_disease_propositions() -> List[Proposition]:
             name="wheezing",
             description="Has wheezing",
             fn=lambda p: p.has_symptom("wheezing",1)
-        ),
-        
-        # Risk factor propositions
+        ),        
         Proposition(
             name="smoker",
             description="Current or former smoker",
@@ -89,41 +74,30 @@ def create_lung_disease_propositions() -> List[Proposition]:
         Proposition(
             name="occupational_hazards",
             description="Exposed to occupational hazards",
-            fn=lambda p: p.has_symptom("occupational_exposure",1)
+            fn=lambda p: p.has_symptom("occupational_exposure",4)
         ),
         Proposition(
             name="air_pollution",
             description="High exposure to air pollution",
-            fn=lambda p: p.has_symptom("air_pollution_exposure",6)
+            fn=lambda p: p.has_symptom("air_pollution_exposure",5)
         ),
-        
-        # Lab test propositions
+
         Proposition(
-            name="low_oxygen",
-            description="Low blood oxygen saturation (< 95%)",
-            fn=lambda p: (test:=p.get_lab_value("oxygen_saturation")) is not None and test<95
+            name="frequent_cold",
+            description="Frequent cold >= 4",
+            fn=lambda p: p.has_symptom("frequent_cold", 4),
         ),
+
         Proposition(
-            name="high_wbc",
-            description="High white blood cell count (> 11,000)",
-            fn=lambda p: (test:=p.get_lab_value("wbc_count")) is not None and test>11000
+            name="dry_cough",
+            description="Dry cough >= 4",
+            fn=lambda p: p.has_symptom("dry_cough", 4),
         ),
-        
-        # MRI-based propositions
+
         Proposition(
-            name="lung_mass_mri",
-            description="MRI shows lung mass",
-            fn=lambda p: any(mri.name=="lung" and mri.present for mri in p.MRIs)
-        ),
-        Proposition(
-            name="pleural_effusion_mri",
-            description="MRI shows pleural effusion",
-            fn=lambda p: any(mri.name=="pleural_effusion" and mri.present for mri in p.MRIs)
-        ),
-        Proposition(
-            name="lymph_nodes_mri",
-            description="MRI shows enlarged lymph nodes",
-            fn=lambda p: any(mri.name=="lymph_nodes" and mri.present for mri in p.MRIs)
+            name="snoring",
+            description="Snoring >= 4",
+            fn=lambda p: p.has_symptom("snoring", 4),
         ),
     ]
     
@@ -152,17 +126,15 @@ def create_lung_disease_modal_model() -> ModalLogic:
     accessibility={
         low_risk_world: {low_risk_world,medium_risk_world},
         medium_risk_world: {medium_risk_world,low_risk_world,high_risk_world},
-        high_risk_world: {high_risk_world,medium_risk_world}
+        high_risk_world: {high_risk_world}
     }
     
     propositions=create_lung_disease_propositions()
     
     valuation={
-        low_risk_world: {"young","middle_aged","female"},
-        medium_risk_world: {"middle_aged","senior","male","chest_pain","shortness_of_breath","smoker","passive_smoker"},
-        high_risk_world: {"senior","male","heavy_smoker","coughing_blood",
-                         "chest_pain","shortness_of_breath","weight_loss",
-                         "occupational_hazards","lung_mass_mri","low_oxygen"}
+        low_risk_world: {"young","middle_aged","passive_smoker"},
+        medium_risk_world: {"smoker","weight_loss","shortness_of_breath","fatigue","frequent_cold","occupational_hazards","dry_cough"},
+        high_risk_world: {"senior","heavy_smoker","coughing_blood","chest_pain","wheezing"}
     }
     
     propositions_dict={prop.name: prop for prop in propositions}
@@ -245,7 +217,7 @@ def analyze_dataset_with_kripke(df: pd.DataFrame) -> List[Dict]:
         
         results.append(result)
         
-        if idx<5:
+        if idx<10:
             print(f"Patient: {patient.id}")
             print(f"  Age: {patient.age}, Gender: {patient.gender}")
             print(f"  Predicted: {predicted_risk.value if predicted_risk else 'Unknown'}")

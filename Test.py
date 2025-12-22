@@ -45,6 +45,6 @@ print("\nValuation (Sample):")
 for world in model.worlds:
     props = model.valuation.get(world, set())
     if props:
-        sample_props = list(props)[:5]  # Show first 5
+        sample_props = list(props)[:10]  # Show first 10
         print(f"  {world.risk_level.value}: {', '.join(sample_props)}" + 
-              ("..." if len(props) > 5 else ""))
+              ("..." if len(props) > 10 else ""))
