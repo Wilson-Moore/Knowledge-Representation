@@ -1,7 +1,7 @@
 import pandas as pd
 from Logic.Modal_Logic.Helpers import analyze_dataset_with_kripke,create_lung_disease_modal_model,demonstrate_modal_operators
 
-df=pd.read_csv("lung_cancer.csv")
+df=pd.read_csv("data/lung_cancer.csv")
 
 print("LUNG DISEASE RISK ASSESSMENT USING KRIPKE SEMANTICS")
 print("="*60)
