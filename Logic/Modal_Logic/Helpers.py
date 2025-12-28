@@ -20,11 +20,6 @@ def create_lung_disease_propositions() -> List[Proposition]:
             name="senior",
             description="Patient is senior (age > 50)",
             fn=lambda p: p.age>50
-        ),      
-        Proposition(
-            name="severe_cough",
-            description="Has severe cough (severity >= 7)",
-            fn=lambda p: p.has_symptom("cough",7)
         ),
         Proposition(
             name="coughing_blood",
@@ -34,28 +29,33 @@ def create_lung_disease_propositions() -> List[Proposition]:
         Proposition(
             name="chest_pain",
             description="Has chest pain (severity >= 5)",
-            fn=lambda p: p.has_symptom("chest_pain",4)
+            fn=lambda p: p.has_symptom("chest_pain",5)
         ),
         Proposition(
             name="shortness_of_breath",
             description="Has shortness of breath (severity >= 6)",
-            fn=lambda p: p.has_symptom("shortness_of_breath",5)
+            fn=lambda p: p.has_symptom("shortness_of_breath",6)
         ),
         Proposition(
             name="fatigue",
             description="Has fatigue (severity >= 6)",
-            fn=lambda p: p.has_symptom("fatigue",4)
+            fn=lambda p: p.has_symptom("fatigue",6)
         ),
         Proposition(
             name="weight_loss",
             description="Has unexplained weight loss",
-            fn=lambda p: p.has_symptom("weight_loss",1)
+            fn=lambda p: p.has_symptom("weight_loss",2)
         ),
         Proposition(
             name="wheezing",
             description="Has wheezing",
             fn=lambda p: p.has_symptom("wheezing",1)
         ),        
+        Proposition(
+            name="swallowing_difficulty",
+            description="Difficulty swallowing food",
+            fn=lambda p: p.has_symptom("swallowing_difficulty",2)
+        ),
         Proposition(
             name="smoker",
             description="Current or former smoker",
@@ -79,7 +79,7 @@ def create_lung_disease_propositions() -> List[Proposition]:
         Proposition(
             name="air_pollution",
             description="High exposure to air pollution",
-            fn=lambda p: p.has_symptom("air_pollution_exposure",5)
+            fn=lambda p: p.has_symptom("air_pollution_exposure",4)
         ),
 
         Proposition(
@@ -96,8 +96,8 @@ def create_lung_disease_propositions() -> List[Proposition]:
 
         Proposition(
             name="snoring",
-            description="Snoring >= 4",
-            fn=lambda p: p.has_symptom("snoring", 4),
+            description="Snores",
+            fn=lambda p: p.has_symptom("snoring", 1),
         ),
     ]
     
@@ -132,9 +132,9 @@ def create_lung_disease_modal_model() -> ModalLogic:
     propositions=create_lung_disease_propositions()
     
     valuation={
-        low_risk_world: {"young","middle_aged","passive_smoker"},
-        medium_risk_world: {"smoker","weight_loss","shortness_of_breath","fatigue","frequent_cold","occupational_hazards","dry_cough"},
-        high_risk_world: {"senior","heavy_smoker","coughing_blood","chest_pain","wheezing"}
+        low_risk_world: {"young","passive_smoker","occupational_hazards","snoring","air_pollution_exposure"},
+        medium_risk_world: {"middle_aged","smoker","weight_loss","shortness_of_breath","dry_cough","fatigue"},
+        high_risk_world: {"senior","frequent_cold","heavy_smoker","coughing_blood","chest_pain","wheezing","swallowing_difficulty"}
     }
     
     propositions_dict={prop.name: prop for prop in propositions}
@@ -217,18 +217,18 @@ def analyze_dataset_with_kripke(df: pd.DataFrame) -> List[Dict]:
         
         results.append(result)
         
-        if idx<10:
-            print(f"Patient: {patient.id}")
-            print(f"  Age: {patient.age}, Gender: {patient.gender}")
-            print(f"  Predicted: {predicted_risk.value if predicted_risk else 'Unknown'}")
-            print(f"  Actual: {actual_risk.value}")
-            print(f"  Correct: {'yes' if correct else 'no'}")
-            print(f"  Top predictions:")
-            for pred in likely_worlds[:2]:
-                print(f"    - {pred['risk_level'].value}: {pred['match_percentage']:.1f}% match")
-                if pred['match_propositions']:
-                    print(f"      Matching propositions: {', '.join(pred['match_propositions'])}")
-            print()
+        # if idx<5:
+        #     print(f"Patient: {patient.id}")
+        #     print(f"  Age: {patient.age}, Gender: {patient.gender}")
+        #     print(f"  Predicted: {predicted_risk.value if predicted_risk else 'Unknown'}")
+        #     print(f"  Actual: {actual_risk.value}")
+        #     print(f"  Correct: {'yes' if correct else 'no'}")
+        #     print(f"  Top predictions:")
+        #     for pred in likely_worlds[:2]:
+        #         print(f"    - {pred['risk_level'].value}: {pred['match_percentage']:.1f}% match")
+        #         if pred['match_propositions']:
+        #             print(f"      Matching propositions: {', '.join(pred['match_propositions'])}")
+        #     print()
     
     return results
 
