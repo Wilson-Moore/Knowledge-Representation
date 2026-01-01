@@ -11,71 +11,109 @@ def create_lung_disease_propositions() -> List[Proposition]:
             description="Patient is young (age < 30)",
             fn=lambda p: p.age<30
         ),
+
         Proposition(
             name="middle_aged",
             description="Patient is middle-aged (30-50)",
             fn=lambda p: 30<=p.age<=50
         ),
+
         Proposition(
             name="senior",
             description="Patient is senior (age > 50)",
             fn=lambda p: p.age>50
         ),
+
         Proposition(
             name="coughing_blood",
             description="Has coughing of blood",
             fn=lambda p: p.has_symptom("coughing_blood",1)
         ),
+
         Proposition(
             name="chest_pain",
             description="Has chest pain (severity >= 5)",
             fn=lambda p: p.has_symptom("chest_pain",5)
         ),
+
         Proposition(
             name="shortness_of_breath",
             description="Has shortness of breath (severity >= 6)",
             fn=lambda p: p.has_symptom("shortness_of_breath",6)
         ),
+
+        Proposition(
+            name="light_fatigue",
+            description="Has fatigue (severity >= 6)",
+            fn=lambda p: p.has_symptom("fatigue",1)
+        ),
+
         Proposition(
             name="fatigue",
             description="Has fatigue (severity >= 6)",
-            fn=lambda p: p.has_symptom("fatigue",6)
+            fn=lambda p: p.has_symptom("fatigue",3)
         ),
+
         Proposition(
             name="weight_loss",
             description="Has unexplained weight loss",
             fn=lambda p: p.has_symptom("weight_loss",2)
         ),
+
         Proposition(
             name="wheezing",
             description="Has wheezing",
             fn=lambda p: p.has_symptom("wheezing",1)
-        ),        
+        ),
+
         Proposition(
             name="swallowing_difficulty",
             description="Difficulty swallowing food",
             fn=lambda p: p.has_symptom("swallowing_difficulty",2)
         ),
+
         Proposition(
             name="smoker",
             description="Current or former smoker",
             fn=lambda p: p.has_symptom("smoking_history",1)
         ),
+
         Proposition(
             name="heavy_smoker",
-            description="Heavy smoker (smoking severity >= 8)",
-            fn=lambda p: p.has_symptom("smoking_history",8)
+            description="Heavy smoker (smoking severity >= 5)",
+            fn=lambda p: p.has_symptom("smoking_history",5)
         ),
+
         Proposition(
-            name="passive_smoker",
-            description="Exposed to passive smoking",
-            fn=lambda p: p.has_symptom("passive_smoke_exposure",1)
+            name="alcohol_use",
+            description="Alcohol abuse (alcohol use >= 4)",
+            fn=lambda p: p.has_symptom("alcohol_use",4)
         ),
+
+        Proposition(
+            name="alcoholic",
+            description="Alcoholic (alcohol_use >= 6)",
+            fn=lambda p: p.has_symptom("alcohol_use",6)
+        ),
+
+        Proposition(
+            name="light_passive_smoker",
+            description="Exposed to passive smoking",
+            fn=lambda p: p.has_symptom("passive_smoke_exposure",2)
+        ),
+
+        Proposition(
+            name="heavy_passive_smoker",
+            description="Exposed to alot of passive smoking",
+            fn=lambda p: p.has_symptom("passive_smoke_exposure",7)
+        ),
+
         Proposition(
             name="occupational_hazards",
             description="Exposed to occupational hazards",
             fn=lambda p: p.has_symptom("occupational_exposure",4)
         ),
+
         Proposition(
             name="air_pollution",
             description="High exposure to air pollution",
@@ -132,9 +170,9 @@ def create_lung_disease_modal_model() -> ModalLogic:
     propositions=create_lung_disease_propositions()
     
     valuation={
-        low_risk_world: {"young","passive_smoker","occupational_hazards","snoring","air_pollution_exposure"},
-        medium_risk_world: {"middle_aged","smoker","weight_loss","shortness_of_breath","dry_cough","fatigue"},
-        high_risk_world: {"senior","frequent_cold","heavy_smoker","coughing_blood","chest_pain","wheezing","swallowing_difficulty"}
+        low_risk_world: {"young","light_passive_smoker","occupational_hazards","snoring","air_pollution_exposure","light_fatigue"},
+        medium_risk_world: {"middle_aged","smoker","alcohol_use","weight_loss","shortness_of_breath","dry_cough","fatigue"},
+        high_risk_world: {"senior","heavy_passive_smoker","alcoholic","heavy_smoker","coughing_blood","chest_pain","wheezing","swallowing_difficulty"}
     }
     
     propositions_dict={prop.name: prop for prop in propositions}

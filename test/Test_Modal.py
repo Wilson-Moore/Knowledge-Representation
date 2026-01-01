@@ -19,32 +19,32 @@ if results:
     # Demonstrate modal operators on first patient
     first_patient = results[0]['patient']
     model = create_lung_disease_modal_model()
-    demonstrate_modal_operators(model, first_patient)
+    # demonstrate_modal_operators(model, first_patient)
 
 # Show Kripke model structure
-print("\n" + "="*60)
-print("KRIPKE MODEL STRUCTURE")
-print("="*60)
+# print("\n" + "="*60)
+# print("KRIPKE MODEL STRUCTURE")
+# print("="*60)
 
-model = create_lung_disease_modal_model()
-print(f"\nNumber of worlds: {len(model.worlds)}")
-print(f"Number of propositions: {len(model.propositions)}")
+# model = create_lung_disease_modal_model()
+# print(f"\nNumber of worlds: {len(model.worlds)}")
+# print(f"Number of propositions: {len(model.propositions)}")
 
-print("\nWorlds:")
-for world in model.worlds:
-    num_props = len(model.valuation.get(world, set()))
-    print(f"  - {world.risk_level.value}: {world.description} ({num_props} propositions)")
+# print("\nWorlds:")
+# for world in model.worlds:
+#     num_props = len(model.valuation.get(world, set()))
+#     print(f"  - {world.risk_level.value}: {world.description} ({num_props} propositions)")
 
-print("\nAccessibility Relations:")
-for world in model.worlds:
-    accessible = model.accessibility.get(world, set())
-    accessible_names = [w.risk_level.value for w in accessible]
-    print(f"  {world.risk_level.value} → {', '.join(accessible_names)}")
+# print("\nAccessibility Relations:")
+# for world in model.worlds:
+#     accessible = model.accessibility.get(world, set())
+#     accessible_names = [w.risk_level.value for w in accessible]
+#     print(f"  {world.risk_level.value} → {', '.join(accessible_names)}")
 
-print("\nValuation (Sample):")
-for world in model.worlds:
-    props = model.valuation.get(world, set())
-    if props:
-        sample_props = list(props)[:10]  # Show first 10
-        print(f"  {world.risk_level.value}: {', '.join(sample_props)}" + 
-              ("..." if len(props) > 10 else ""))
+# print("\nValuation (Sample):")
+# for world in model.worlds:
+#     props = model.valuation.get(world, set())
+#     if props:
+#         sample_props = list(props)[:10]  # Show first 10
+#         print(f"  {world.risk_level.value}: {', '.join(sample_props)}" + 
+#               ("..." if len(props) > 10 else ""))
