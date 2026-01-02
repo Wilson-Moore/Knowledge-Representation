@@ -1,5 +1,5 @@
 from dataclasses import dataclass,field
-from typing import List,Callable,Optional
+from typing import List,Optional
 from enum import Enum
 
 @dataclass(frozen=True)

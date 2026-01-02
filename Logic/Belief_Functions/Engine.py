@@ -1,112 +1,107 @@
-"""
-Engine Dempster-Shafer équilibré - Simple mais complet
-"""
-from typing import Dict, List, Tuple
-from enum import Enum
-from Knowledge.Hierarchy import Patient, RiskLevel
+from typing import Dict
+from Knowledge.Hierarchy import RiskLevel
 
 
-class DSBalanced:
-    """Bon compromis simplicité/fonctionnalité"""
-    
-    def __init__(self):
-        # 3 sources simples
-        self.sources = {
-            'symptoms': ['coughing_of_blood', 'chest_pain', 'weight_loss'],
-            'exposure': ['smoking', 'air_pollution'],
-            'history': ['genetic_risk', 'chronic_lung_disease']
-        }
-        
-        # Hypothèses
-        self.H = Enum('H', 'LOW MEDIUM HIGH')
-    
-    def evaluate(self, patient: Patient) -> Dict:
-        """Évalue un patient"""
-        # Données du patient
-        data = self._get_patient_data(patient)
-        
-        # Masses pour chaque source
-        masses = []
-        for src_name, indicators in self.sources.items():
-            mass = self._source_mass(data, indicators)
-            masses.append(mass)
-        
-        # Combinaison
-        final_mass = self._combine_masses(masses)
-        
-        # Décision
-        risk, confidence = self._make_decision(final_mass)
-        
-        return {
-            'patient': patient,
-            'predicted': risk,
-            'belief': self._get_belief(final_mass),
-            'confidence': confidence,
-            'method': 'Dempster-Shafer'
-        }
-    
-    def _get_patient_data(self, patient: Patient) -> Dict[str, float]:
-        """Extrait données normalisées"""
-        data = {}
-        for symptom in patient.symptoms:
-            data[symptom.name] = symptom.severity / 10.0
-        return data
-    
-    def _source_mass(self, data: Dict, indicators: List[str]) -> Dict[Tuple, float]:
-        """Calcule masse pour une source"""
-        # Score moyen
-        scores = [data.get(i, 0.0) for i in indicators]
-        score = sum(scores) / max(len(scores), 1)
-        
-        if score < 0.4:
-            return {(self.H.LOW,): 0.6, (self.H.LOW, self.H.MEDIUM): 0.3, (self.H.LOW, self.H.MEDIUM, self.H.HIGH): 0.1}
-        elif score < 0.7:
-            return {(self.H.MEDIUM,): 0.4, (self.H.MEDIUM, self.H.HIGH): 0.3, (self.H.LOW, self.H.MEDIUM, self.H.HIGH): 0.3}
+class BeliefEngine:
+    """
+    Calibrated belief-based inference engine
+    (Dempster–Shafer inspired, but decision-oriented)
+    """
+
+    def _norm(self, v):
+        """Normalize symptom severity to [0,1]"""
+        try:
+            return min(max(float(v) / 10.0, 0.0), 1.0)
+        except Exception:
+            return 0.0
+
+    def infer(self, row) -> Dict:
+
+        # --- Normalize symptoms (UI-safe: missing => 0) ---
+        blood = self._norm(row.get("Coughing of Blood", 0))
+        weight = self._norm(row.get("Weight Loss", 0))
+        breath = self._norm(row.get("Shortness of Breath", 0))
+        air = self._norm(row.get("Air Pollution", 0))
+        alcohol = self._norm(row.get("Alcohol use", 0))
+
+        chest = self._norm(row.get("Chest Pain", 0))
+        fatigue = self._norm(row.get("Fatigue", 0))
+        cough = self._norm(row.get("Dry Cough", 0))
+        wheeze = self._norm(row.get("Wheezing", 0))
+
+        cold = self._norm(row.get("Frequent Cold", 0))
+        snore = self._norm(row.get("Snoring", 0))
+
+        smoking = self._norm(row.get("Smoking", 0))
+        passive = self._norm(row.get("Passive Smoker", 0))
+
+        # Evidence construction
+
+        # LOW risk: weak / common symptoms
+        low_evidence = (
+            cold * 0.4 +
+            snore * 0.4 +
+            air * 0.3 +
+            fatigue * 0.3 
+        )
+
+        # MEDIUM risk: functional impairment
+        medium_evidence = (
+            chest * 0.4 +
+            cough * 0.4 +
+            weight * 0.3 +
+            breath * 0.2 +
+            alcohol * 0.2
+        )
+
+        # HIGH raw evidence
+        high_raw = (
+            blood * 1.2 +
+            smoking * 0.6 +
+            wheeze * 0.7
+        )
+
+        # Severity gating (CRITICAL)
+        strong_high = max(blood, weight, breath)
+
+        if strong_high < 0.5:
+            high_evidence = high_raw * 0.4
         else:
-            return {(self.H.HIGH,): 0.7, (self.H.MEDIUM, self.H.HIGH): 0.2, (self.H.LOW, self.H.MEDIUM, self.H.HIGH): 0.1}
-    
-    def _combine_masses(self, masses: List[Dict]) -> Dict:
-        """Combine avec Dempster simplifié"""
-        if not masses:
-            return {(self.H.LOW, self.H.MEDIUM, self.H.HIGH): 1.0}
-        
-        current = masses[0]
-        for mass in masses[1:]:
-            new = {}
-            for (setA, mA) in current.items():
-                for (setB, mB) in mass.items():
-                    # Intersection
-                    inter = tuple(set(setA).intersection(set(setB)))
-                    if inter:
-                        new[inter] = new.get(inter, 0.0) + mA * mB
-            
-            # Normaliser
-            total = sum(new.values())
-            if total > 0:
-                current = {k: v/total for k, v in new.items()}
-        
-        return current
-    
-    def _get_belief(self, mass: Dict) -> Dict[str, float]:
-        """Calcule croyance"""
-        belief = {'Low': 0.0, 'Medium': 0.0, 'High': 0.0}
-        
-        for subset, value in mass.items():
-            if self.H.LOW in subset:
-                belief['Low'] += value
-            if self.H.MEDIUM in subset:
-                belief['Medium'] += value
-            if self.H.HIGH in subset:
-                belief['High'] += value
-        
-        return belief
-    
-    def _make_decision(self, mass: Dict) -> Tuple[RiskLevel, float]:
-        """Prend décision"""
-        belief = self._get_belief(mass)
-        
-        # Chercher max
-        max_risk = max(belief, key=belief.get)
-        confidence = belief[max_risk]
-        
-        return RiskLevel(max_risk), confidence
+            high_evidence = high_raw
+
+        # Competition (belief interaction)
+        high_evidence *= (1 - 0.5 * medium_evidence)
+        medium_evidence *= (1 - 0.3 * low_evidence)
+
+        # Dataset priors (calibration)
+        priors = {
+            RiskLevel.LOW: 0.35,
+            RiskLevel.MEDIUM: 0.35,
+            RiskLevel.HIGH: 0.30,
+        }
+
+        beliefs = {
+            RiskLevel.LOW: low_evidence * priors[RiskLevel.LOW],
+            RiskLevel.MEDIUM: medium_evidence * priors[RiskLevel.MEDIUM],
+            RiskLevel.HIGH: high_evidence * priors[RiskLevel.HIGH],
+        }
+
+        # Normalize
+        total = sum(beliefs.values())
+
+        if total == 0:
+            beliefs = {
+                RiskLevel.LOW: 0.33,
+                RiskLevel.MEDIUM: 0.33,
+                RiskLevel.HIGH: 0.34,
+            }
+        else:
+            beliefs = {k: v / total for k, v in beliefs.items()}
+
+        predicted = max(beliefs, key=beliefs.get)
+
+        return {
+            "predicted": predicted,
+            "beliefs": beliefs,
+            "confidence": beliefs[predicted]
+        }
