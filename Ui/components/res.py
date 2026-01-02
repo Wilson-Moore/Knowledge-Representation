@@ -6,6 +6,7 @@ from PyQt5.QtGui import QMovie, QFont, QPalette, QColor
 import os
 import pandas as pd
 import random
+from pprint import pprint
 
 from .navbar import Navbar
 from ..Helpers.responsive import ResponsiveMixin
@@ -119,7 +120,7 @@ class ResultPage(QWidget, ResponsiveMixin):
         self.spinner.start()
 
         # prediction delay
-        QTimer.singleShot(5000, self.show_results)
+        QTimer.singleShot(2000, self.show_results)
 
     def show_results(self):
         self.spinner.stop()
@@ -134,8 +135,10 @@ class ResultPage(QWidget, ResponsiveMixin):
             self.result_label.setText("No reasoning method selected")
             self.result_label.setVisible(True)
             return
-
-        results = analyze_fn(df)
+        if method == "Belief" or method == "Fuzzy reasoning":
+            results = analyze_fn(df, True)
+        else:
+            results = analyze_fn(df)
         if not results:
             self.result_label.setText("Unable to analyze patient data.")
             self.result_label.setVisible(True)
@@ -225,8 +228,7 @@ class ResultPage(QWidget, ResponsiveMixin):
             "Level": "LOW"
         }
 
-        for symptom in patient_data.get("symptoms", []):
-            csv_col = SYMPTOMS.get(symptom)
-            if csv_col:
-                patient_dict[symptom] = 1
+        for symptom, data in patient_data.get("symptoms", {}).items():
+            severity = data.get("severity", 1)
+            patient_dict[symptom] = severity
         return pd.DataFrame([patient_dict])

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QComboBox,
     QPushButton, QVBoxLayout,
-    QSizePolicy
+    QSizePolicy, QSlider
 )
 from PyQt5.QtWidgets import QHBoxLayout, QListView, QAbstractItemView
 from PyQt5.QtGui import QPixmap, QStandardItemModel, QStandardItem
@@ -43,6 +43,9 @@ class SymptomsPage(QWidget, ResponsiveMixin):
         self.stack = stack
         self.checkboxes = {}
         self.funcs = Funcs(patient_data)
+        patient_data["symptoms"] = {}
+
+        self.symptom_sliders = {}
 
         self.navbar = Navbar(self.stack)
         # content image
@@ -73,6 +76,7 @@ class SymptomsPage(QWidget, ResponsiveMixin):
             item.setCheckState(Qt.Unchecked)
             self.symptoms_model.appendRow(item)
 
+        self.symptoms_model.itemChanged.connect(self.on_sym_change)
         self.symptoms_dropdown.setModel(self.symptoms_model)
         self.symptoms_dropdown.view().pressed.connect(
             lambda index: self.funcs.toggle_item(index, self.symptoms_model)
@@ -85,6 +89,10 @@ class SymptomsPage(QWidget, ResponsiveMixin):
                 self.next_btn
             )
         )
+
+        # Slider For Selecting the severity
+        self.sliders_layout = QVBoxLayout()
+        self.sliders_layout.setSpacing(10)
 
         # Method selecting (Modal, Default, Fuzzy)
         self.method_dropdown = QComboBox()
@@ -136,19 +144,76 @@ class SymptomsPage(QWidget, ResponsiveMixin):
         self.next_btn.clicked.connect(self.next_page)
 
         # Layout
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(self.navbar)
-        main_layout.addSpacing(15)
-        main_layout.addWidget(self.image_label)
-        main_layout.addLayout(select_row)
-        main_layout.addWidget(self.next_btn, alignment=Qt.AlignCenter)
-        main_layout.addStretch()
+        self.main_layout = QVBoxLayout()
+        wrapper = QWidget()
+        self.container = QHBoxLayout()
+        wrapper.setLayout(self.container)
+        left_col = QVBoxLayout()
+        left_col.addWidget(self.image_label)
+        left_col.addStretch()
+        right_col = QVBoxLayout()
+        right_col.addLayout(select_row)
+        right_col.addLayout(self.sliders_layout) 
+        right_col.addWidget(self.next_btn, alignment=Qt.AlignCenter)
+        right_col.addStretch() 
 
-        self.setLayout(main_layout)
+        self.container.addLayout(left_col, stretch=1)
+        self.container.addLayout(right_col, stretch=0)
+        self.container.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.main_layout.addWidget(self.navbar)
+        self.main_layout.addWidget(wrapper)
+
+        self.setLayout(self.main_layout)
+
 
     def next_page(self):
         if not self.next_btn.isEnabled():
             return
-        patient_data["symptoms"] = self.funcs.get_selected_symptoms(self.symptoms_model)
         patient_data["method"] = self.method_dropdown.currentText()
         self.stack.setCurrentIndex(3)
+
+    def on_sym_change(self, item):
+        symptom = item.text()
+
+        if item.checkState() == Qt.Checked:
+            self.show_range(symptom, 1, 10)
+        else:
+            self.remove_range(symptom)
+            print(f"Uncheked {item.text()}")
+
+    def show_range(self, symptom, min, max):
+        if symptom in self.symptom_sliders:
+            return
+        label = QLabel(symptom)
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(min)
+        slider.setMaximum(max)
+        slider.setValue(1)
+        slider.setObjectName(symptom)
+
+        slider.valueChanged.connect(
+            lambda val, s=symptom: self.on_slid_change(s, val)
+        )
+        self.symptom_sliders[symptom] = (label, slider)
+        self.sliders_layout.addWidget(label)
+        self.sliders_layout.addWidget(slider)
+        patient_data["symptoms"][symptom] = {
+            "key": SYMPTOMS[symptom],
+            "severity": 1
+        }
+    def remove_range(self, symptom):
+        if symptom not in self.symptom_sliders:
+            return
+
+        label, slider = self.symptom_sliders.pop(symptom)
+
+        label.deleteLater()
+        slider.deleteLater()
+        patient_data["symptoms"].pop(symptom)
+
+        patient_data.setdefault("symptoms_severity", {})
+        patient_data["symptoms_severity"].pop(symptom, None)
+
+    def on_slid_change(self, symptom, value):
+        patient_data["symptoms"][symptom]["severity"] = value

@@ -9,9 +9,7 @@ class Funcs:
         for i in range(symptoms_model.rowCount()):
             item = symptoms_model.item(i)
             if item.checkState() == Qt.Checked:
-                selected.append(item.text())
-
-        self.patient_data["symptoms"] = selected
+                selected.append(item.text())    
 
         if selected:
             symptoms_dropdown.setEditText(", ".join(selected))
