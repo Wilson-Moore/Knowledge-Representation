@@ -255,18 +255,18 @@ def analyze_dataset_with_kripke(df: pd.DataFrame) -> List[Dict]:
         
         results.append(result)
         
-        # if idx<5:
-        #     print(f"Patient: {patient.id}")
-        #     print(f"  Age: {patient.age}, Gender: {patient.gender}")
-        #     print(f"  Predicted: {predicted_risk.value if predicted_risk else 'Unknown'}")
-        #     print(f"  Actual: {actual_risk.value}")
-        #     print(f"  Correct: {'yes' if correct else 'no'}")
-        #     print(f"  Top predictions:")
-        #     for pred in likely_worlds[:2]:
-        #         print(f"    - {pred['risk_level'].value}: {pred['match_percentage']:.1f}% match")
-        #         if pred['match_propositions']:
-        #             print(f"      Matching propositions: {', '.join(pred['match_propositions'])}")
-        #     print()
+        if idx<5:
+            print(f"Patient: {patient.id}")
+            print(f"  Age: {patient.age}, Gender: {patient.gender}")
+            print(f"  Predicted: {predicted_risk.value if predicted_risk else 'Unknown'}")
+            print(f"  Actual: {actual_risk.value}")
+            print(f"  Correct: {'yes' if correct else 'no'}")
+            print(f"  Top predictions:")
+            for pred in likely_worlds[:2]:
+                print(f"    - {pred['risk_level'].value}: {pred['match_percentage']:.1f}% match")
+                if pred['match_propositions']:
+                    print(f"      Matching propositions: {', '.join(pred['match_propositions'])}")
+            print()
     
     return results
 
